@@ -6,11 +6,12 @@ const fs = require('fs');
 const client = new Client({
     puppeteer: {
         args: ['--no-sandbox', "--disable-setuid-sandbox"]
-      }
+    }
 });
 
 client.on('qr', (qr) => {
     // Generate and scan this code with your phone
+    console.log('QR RECEIVED: ', qr);
     qrcode.generate(qr, { small: true })
 });
 
