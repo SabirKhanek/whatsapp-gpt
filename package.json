@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "axios": "^1.2.6",
+    "openai": "^3.1.0",
+    "qrcode-terminal": "^0.12.0",
+    "request": "^2.88.2",
+    "whatsapp-web.js": "^1.19.3"
+  },
+  "name": "mychatgpt",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
