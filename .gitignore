@@ -1,2 +1,3 @@
 node_modules
-jj.json
+.wwebjs_auth
+conversationHistory.json

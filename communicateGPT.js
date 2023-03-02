@@ -8,24 +8,20 @@ const openai = new OpenAIApi(configuration);
 
 async function generateResponse(request) {
     try {
-        const resp = await openai.createCompletion({
-            model: "text-davinci-002",
-            prompt: request,
-            temperature: 0.3,
-            max_tokens: 3000,
-            top_p: 1.0,
-            frequency_penalty: 0.0,
-            presence_penalty: 0.0,
+        const resp = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo",
+            messages: [{ 'role': 'system', 'content': "You are a whatsapp chatbot. You are developed by Sabir Khan an individual computer science student. You'll do your text formatting accordingly such as enclosing program code in ```CODE``` or bold text by enclosing it in *TEXT*" }, ...request]
         })
-        if (resp.data.choices[0].text) {
-            txt = resp.data.choices[0].text
+
+        if (resp.data.choices[0].message.content) {
+            txt = resp.data.choices[0].message.content
             return txt
         } else {
-            return "Failed to get a response from GPT-3"
+            return "CODE500"
         }
     }
     catch (err) {
-        return "Failed to get a response from GPT-3"
+        return "CODE500"
     }
 }
 
