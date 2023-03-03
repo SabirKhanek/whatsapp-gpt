@@ -1,7 +1,8 @@
 const { Configuration, OpenAIApi } = require("openai")
-const keyopenai = require('./key.json').api_key;
+const { model_role: modelRole } = require('./config.js')
+
 const configuration = new Configuration({
-    apiKey: keyopenai,
+    apiKey: process.env.openai_key
 });
 
 const openai = new OpenAIApi(configuration);
@@ -10,7 +11,7 @@ async function generateResponse(request) {
     try {
         const resp = await openai.createChatCompletion({
             model: "gpt-3.5-turbo",
-            messages: [{ 'role': 'system', 'content': "You are a whatsapp chatbot. You are developed by Sabir Khan an individual computer science student. You'll do your text formatting accordingly such as enclosing program code in ```CODE``` or bold text by enclosing it in *TEXT*" }, ...request]
+            messages: [{ 'role': 'system', 'content': (modelRole ? modelRole : "You are a WhatsApp ChatBot") }, ...request]
         })
 
         if (resp.data.choices[0].message.content) {

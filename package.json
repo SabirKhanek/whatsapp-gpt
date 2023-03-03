@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "@picovoice/leopard-node": "^1.1.1",
     "axios": "^1.3.4",
+    "dotenv": "^16.0.3",
     "openai": "^3.2.1",
     "qrcode-terminal": "^0.12.0",
     "request": "^2.88.2",
