@@ -4,8 +4,6 @@ const ffmpeg = require('fluent-ffmpeg');
 const FormData = require('form-data');
 
 async function generateTranscription(filePath) {
-    console.log(filePath)
-    console.log(fs.existsSync(filePath))
     // set up the form data object
     const form = new FormData();
     form.append('model', 'whisper-1');
@@ -19,7 +17,6 @@ async function generateTranscription(filePath) {
                 ...form.getHeaders()
             }
         })
-        console.log(response.data.text)
         return response.data.text
     } catch (err) {
         console.log(err.message)
@@ -40,7 +37,6 @@ async function convertOggToMp3(fileName) {
         .format('mp3')
         .pipe(fs.createWriteStream(outputFilePath))
         .on('finish', async () => {
-            console.log('Conversion complete');
             try {
                 await fs.promises.unlink(fileName + '.ogg')
             } catch {
@@ -48,7 +44,7 @@ async function convertOggToMp3(fileName) {
             }
         });
 
-    while (!fs.existsSync(outputFilePath)) {
+    while (fs.existsSync(inputFilePath)) {
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
     return outputFilePath;
@@ -92,7 +88,6 @@ async function handleVoice({ mimetype, data }) {
     let transcription;
     try {
         transcription = await getTranscription(mimetype, data);
-        console.log(transcription)
     } catch {
         return 'NO TRANSCRIPTION'
     }
