@@ -22,8 +22,15 @@ async function generateResponse(request) {
         }
     }
     catch (err) {
+        console.log(err)
         return "CODE500"
     }
+}
+
+if (typeof module !== 'undefined' && !module.parent) {
+    generateResponse([{ 'role': 'user', 'content': 'Hello' }]).then((resp) => {
+        console.log(resp)
+    })
 }
 
 
