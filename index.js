@@ -1,18 +1,29 @@
 require('dotenv').config()
 // Check if the environment variables are set
-if (!process.env.openai_key || !process.env.picovoice_key) {
-    console.log('Please set the openai_key and picovoice_key environment variables')
+if (!process.env.openai_key) {
+    console.log('Please set the openai_key environment variables')
     process.exit(1)
 }
 
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-const generateAIResp = require('./communicateGPT.js');
-const handleVoice = require('./speechToText.js');
 const fs = require('fs');
 
-const { commands, help: helpResponse } = require('./commands.js')
+const generateAIResp = require('./communicateGPT.js');
+const handleVoice = require('./speechToText.js');
+const { handleDallERequest } = require('./textToImage.js');
+const { commands, help: helpResponse } = require('./commands.js');
 
+
+function hasResponseCommand(text) {
+    if (text.includes('%%%DALLE-REQUEST%%%')) {
+        return '%%%DALLE-REQUEST%%%'
+    }
+}
+
+const responseCommandsOperations = {
+    '%%%DALLE-REQUEST%%%': handleDallERequest
+}
 
 
 const client = new Client({
@@ -92,15 +103,41 @@ async function handleRequest(req, message) {
         }
 
         // TODO: Will add DALL-E integration here
-
+        const response_command = hasResponseCommand(reply)
+        if (Object.keys(responseCommandsOperations).includes(response_command)) {
+            const operation = responseCommandsOperations[response_command]
+            const operationResult = await operation(reply)
+            if (operationResult) reply = operationResult
+        }
         // END TODO
 
         // Send the response to the user and store it in the conversation history
-        client.sendMessage(message.from, reply);
-        conversationHistory[message.from].push({
-            role: 'assistant',
-            content: reply,
-        });
+        if (typeof reply === 'string') {
+            client.sendMessage(message.from, reply);
+            conversationHistory[message.from].push({
+                role: 'assistant',
+                content: reply,
+            });
+        } else {
+            if (reply.type && reply.type === 'media') {
+                try {
+                    const media = await MessageMedia.fromUrl(reply.mediaUrl);
+                    client.sendMessage(message.from, media, { caption: reply.caption })
+                    conversationHistory[message.from].push({
+                        role: 'assistant',
+                        content: 'The requested image was generated and was sent to the user.',
+                    });
+                } catch (err) {
+                    client.sendMessage(message.from, `Image was generated from DALL-E but couldn't be downloaded.\nYou can get the image from the URL yourself:\n${reply.mediaUrl}`)
+                    conversationHistory[message.from].push({
+                        role: 'assistant',
+                        content: 'There was a problem downloading the image and image was not sent to the user. However link to the image was sent.',
+                    });
+                }
+
+            }
+        }
+
 
         // Write the conversation history to a file after every message
         await fs.promises.writeFile('conversationHistory.json', JSON.stringify(conversationHistory))

@@ -1,11 +1,6 @@
-const { Configuration, OpenAIApi } = require("openai")
+const { openai } = require("./openai")
 const { model_role: modelRole } = require('./config.js')
 
-const configuration = new Configuration({
-    apiKey: process.env.openai_key
-});
-
-const openai = new OpenAIApi(configuration);
 
 async function generateResponse(request) {
     try {
