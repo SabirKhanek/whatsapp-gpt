@@ -1,4 +1,0 @@
-# flyctl launch added from .gitignore
-**\node_modules
-**\jj.json
-fly.toml

@@ -108,6 +108,10 @@ async function handleRequest(req, message) {
             const operation = responseCommandsOperations[response_command]
             const operationResult = await operation(reply)
             if (operationResult) reply = operationResult
+            else {
+                client.sendMessage(message.from, "I am sorry I couldn't generate the requested image.")
+                return
+            }
         }
         // END TODO
 
@@ -123,16 +127,16 @@ async function handleRequest(req, message) {
                 try {
                     const media = await MessageMedia.fromUrl(reply.mediaUrl);
                     client.sendMessage(message.from, media, { caption: reply.caption })
-                    conversationHistory[message.from].push({
-                        role: 'assistant',
-                        content: 'The requested image was generated and was sent to the user.',
-                    });
+                    // conversationHistory[message.from].push({
+                    //     role: 'assistant',
+                    //     content: `Here's the image you requested:\n${reply.mediaUrl}`,
+                    // });
                 } catch (err) {
                     client.sendMessage(message.from, `Image was generated from DALL-E but couldn't be downloaded.\nYou can get the image from the URL yourself:\n${reply.mediaUrl}`)
-                    conversationHistory[message.from].push({
-                        role: 'assistant',
-                        content: 'There was a problem downloading the image and image was not sent to the user. However link to the image was sent.',
-                    });
+                    // conversationHistory[message.from].push({
+                    //     role: 'assistant',
+                    //     content: `Here's the image you requested:\n${reply.mediaUrl}`,
+                    // });
                 }
 
             }
