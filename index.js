@@ -33,6 +33,7 @@ const client = new Client({
     }
 });
 
+const MAX_TOKENS = 4096; // Max number of tokens that can be used in a single request
 let conversationHistory = {};
 
 // Read conversation history from file if it exists
@@ -93,9 +94,12 @@ async function handleRequest(req, message) {
 
         // Generate a response
         var reply;
+        var cost;
         try {
-            reply = await generateAIResp(apiReq);
-            if (reply === 'CODE500') throw 'error'
+            const resp = await generateAIResp(apiReq);
+            reply = resp.reply;
+            cost = resp.cost;
+            if (resp === 'CODE500') throw 'error'
         } catch (error) {
             client.sendMessage(message.from, 'Something went wrong. Try clearing the conversation by typing "%%clear"');
             conversationHistory[message.from].pop()
@@ -115,13 +119,23 @@ async function handleRequest(req, message) {
         }
         // END TODO
 
+
         // Send the response to the user and store it in the conversation history
         if (typeof reply === 'string') {
-            client.sendMessage(message.from, reply);
+            client.sendMessage(
+                message.from,
+                reply + (cost > ((MAX_TOKENS / 100) * 75) && cost < ((MAX_TOKENS / 100) * 90) ? '\n\n I am running out of tokens. Conversation will be wiped out soon automatically.' : '')
+            );
             conversationHistory[message.from].push({
                 role: 'assistant',
                 content: reply,
             });
+            // store the tokens cost
+            if (cost >= ((MAX_TOKENS / 100) * 90)) {
+                conversationHistory[message.from] = [];
+                client.sendMessage(message.from, 'History was cleared because it exceeds the token that could cause unreliable responses.')
+            }
+
         } else {
             if (reply.type && reply.type === 'media') {
                 try {
