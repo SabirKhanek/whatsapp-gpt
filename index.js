@@ -12,6 +12,7 @@ const fs = require('fs');
 const generateAIResp = require('./communicateGPT.js');
 const handleVoice = require('./speechToText.js');
 const { handleDallERequest } = require('./textToImage.js');
+const { RequestLimitEnabled } = require('./config.js')
 const { commands, help: helpResponse } = require('./commands.js');
 
 
@@ -34,7 +35,9 @@ const client = new Client({
 });
 
 const MAX_TOKENS = 4096; // Max number of tokens that can be used in a single request
+const REQUEST_LIMIT = 15; // Max number of requests that can be made in a day
 let conversationHistory = {};
+let requestCount = {};
 
 // Read conversation history from file if it exists
 if (fs.existsSync('conversationHistory.json')) {
@@ -158,12 +161,23 @@ async function handleRequest(req, message) {
 
 
         // Write the conversation history to a file after every message
+        requestCount[message.from] = requestCount[message.from] ? requestCount[message.from] + 1 : 1
         await fs.promises.writeFile('conversationHistory.json', JSON.stringify(conversationHistory))
         return true
     }
 }
 
+function isAllowed(uid) {
+    if (requestCount[uid] && requestCount[uid] >= REQUEST_LIMIT) {
+        client.sendMessage(uid, `You have reached the limit of ${REQUEST_LIMIT} requests per day. Please try again tomorrow.`)
+        return false
+    } else {
+        return true
+    }
+}
+
 client.on('message', async (message) => {
+    if (REQUEST_LIMIT && !isAllowed(message.from)) return
     if (message.from === 'status@broadcast') return
     let request;
     if (message.hasMedia) {
@@ -177,6 +191,22 @@ client.on('message', async (message) => {
 client.on('ready', () => {
     console.log('Client is ready!');
 });
+
+// Reset chat after every hour
+function resetChat() {
+    console.log('Request History cleared')
+    conversationHistory = {};
+    fs.promises.writeFile('conversationHistory.json', JSON.stringify(conversationHistory))
+}
+setInterval(resetChat, 1000 * 60 * 60);
+
+// Reset request count after every day
+function resetRequestCount() {
+    console.log('Request Count cleared')
+    requestCount = {};
+}
+setInterval(resetRequestCount, 1000 * 60 * 60 * 24);
+
 
 
 client.initialize();

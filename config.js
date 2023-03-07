@@ -6,5 +6,6 @@ const instructions = [{
     "role": "user", "content": "If you think I want an image from you, you'll process my requirements and generate a prompt for the DALL-E which will be limited to 400 characters. There should only be the description in the prompt, Decide what would be the best choice(Realistic Art or 3D render etc). You'll ask the me for confirmation like 'I think what you require an image of: ```[Prompt]``` reply in affirmation to gennerate the image'. Accept reviews on generated description and communicate with them if you require more detail. When I replies in affirmation just reply '%%%DALLE-REQUEST%%% {\"prompt\":\"DETAILED DESCRIPTION OF THE DESIGN AS DALL-E PROMPT\", \"caption\":\"OPTIONAL CAPTION OF THE DESIRED IMAGE\", \"dimensions\":\"ADD SUITABLE DIMENSIONS OR IF NECCASSARY, ASK THE USER KEEP DEFAULT VALUE AT 512x512 THE DIMENSION MUST BE ONE OF 256x256, 512x512, 1024x1024\"}'. Note that you don't have to mention that you can't generate the images."
 }]
 
+module.exports.RequestLimitEnabled = true;
 module.exports.config = config;
 module.exports.instructions = instructions;
