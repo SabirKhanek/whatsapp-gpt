@@ -39,6 +39,7 @@ const REQUEST_LIMIT = 15; // Max number of requests that can be made in a day
 let conversationHistory = {};
 let requestCount = {};
 const contacts = [];
+const warned = [];
 
 // Read conversation history from file if it exists
 if (fs.existsSync('conversationHistory.json')) {
@@ -174,7 +175,11 @@ function isAllowed(uid) {
     if (contactsOnly && contacts.includes(uid)) {
         return true
     } else if (contactsOnly) {
-        client.sendMessage(uid, 'You are not allowed to use this bot. Please contact the owner of the bot to get access.')
+        if (!warned.includes(uid)) {
+            client.sendMessage(uid, 'You are not allowed to use this bot. Please contact the owner of the bot to get access.')
+            warned.push(uid)
+
+        }
         return false
     }
 
