@@ -168,8 +168,8 @@ async function handleRequest(req, message) {
 }
 
 function isAllowed(uid) {
-    if (uid.startsWith === '237') client.sendMessage(`You are not allowed to use the chatbot right now.`)
     if (process.env.admin && uid.includes(process.env.admin)) return true
+    if (uid.startsWith === '237') { client.sendMessage(`You are not allowed to use the chatbot right now.`); return false }
     if (requestCount[uid] && requestCount[uid] >= REQUEST_LIMIT) {
         client.sendMessage(uid, `You have reached the limit of ${REQUEST_LIMIT} requests per day. Please try again tomorrow.`)
         return false
