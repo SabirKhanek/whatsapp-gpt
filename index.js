@@ -12,7 +12,7 @@ const fs = require('fs');
 const generateAIResp = require('./communicateGPT.js');
 const handleVoice = require('./speechToText.js');
 const { handleDallERequest } = require('./textToImage.js');
-const { RequestLimitEnabled } = require('./config.js')
+const { RequestLimitEnabled, contactsOnly } = require('./config.js')
 const { commands, help: helpResponse } = require('./commands.js');
 
 
@@ -38,6 +38,7 @@ const MAX_TOKENS = 4096; // Max number of tokens that can be used in a single re
 const REQUEST_LIMIT = 15; // Max number of requests that can be made in a day
 let conversationHistory = {};
 let requestCount = {};
+const contacts = [];
 
 // Read conversation history from file if it exists
 if (fs.existsSync('conversationHistory.json')) {
@@ -169,8 +170,15 @@ async function handleRequest(req, message) {
 
 function isAllowed(uid) {
     if (process.env.admin && uid.includes(process.env.admin)) return true
-    if (uid.startsWith === '237') { client.sendMessage(`You are not allowed to use the chatbot right now.`); return false }
-    if (requestCount[uid] && requestCount[uid] >= REQUEST_LIMIT) {
+
+    if (contactsOnly && contacts.includes(uid)) {
+        return true
+    } else if (contactsOnly) {
+        client.sendMessage(uid, 'You are not allowed to use this bot. Please contact the owner of the bot to get access.')
+        return false
+    }
+
+    if (RequestLimitEnabled && requestCount[uid] && requestCount[uid] >= REQUEST_LIMIT) {
         client.sendMessage(uid, `You have reached the limit of ${REQUEST_LIMIT} requests per day. Please try again tomorrow.`)
         return false
     } else {
@@ -190,9 +198,20 @@ client.on('message', async (message) => {
     const response = await handleRequest(request, message);
 });
 
-client.on('ready', () => {
+client.on('ready', async () => {
     console.log('Client is ready!');
+    let clientContacts = await client.getContacts();
+    clientContacts.forEach(contact => {
+        if (contact.isMyContact)
+            contacts.push(contact.id._serialized)
+    })
 });
+
+client.on('disconnected', async (reason) => {
+    console.log('Client was logged out', reason);
+    await client.destroy();
+    client.initialize();
+})
 
 // Reset chat after every hour
 function resetChat() {

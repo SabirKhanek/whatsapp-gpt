@@ -16,7 +16,7 @@ async function generateResponse(request) {
         }
     }
     catch (err) {
-        console.log(err)
+        console.log(err.message)
         return "CODE500"
     }
 }
