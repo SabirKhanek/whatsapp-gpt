@@ -172,7 +172,9 @@ async function isAllowed(uid) {
     if (process.env.admin && uid.includes(process.env.admin)) return true
 
 
-    contacts = (await client.getContacts()).map((contact) => contact.id._serialized);
+    contacts = (await client.getContacts()).map((contact) => {
+        if (contact.isMyContact) { return contact.id._serialized }
+    });
 
 
     if (contactsOnly && contacts.includes(uid)) {
@@ -195,7 +197,8 @@ async function isAllowed(uid) {
 }
 
 client.on('message', async (message) => {
-    if (REQUEST_LIMIT && !isAllowed(message.from)) return
+
+    if (REQUEST_LIMIT && !await isAllowed(message.from)) return
     if (message.from === 'status@broadcast') return
     let request;
     if (message.hasMedia) {
