@@ -38,7 +38,6 @@ const MAX_TOKENS = 4096; // Max number of tokens that can be used in a single re
 const REQUEST_LIMIT = 15; // Max number of requests that can be made in a day
 let conversationHistory = {};
 let requestCount = {};
-const contacts = [];
 const warned = [];
 
 // Read conversation history from file if it exists
@@ -169,14 +168,18 @@ async function handleRequest(req, message) {
     }
 }
 
-function isAllowed(uid) {
+async function isAllowed(uid) {
     if (process.env.admin && uid.includes(process.env.admin)) return true
+
+
+    contacts = (await client.getContacts()).map((contact) => contact.id._serialized);
+
 
     if (contactsOnly && contacts.includes(uid)) {
         return true
     } else if (contactsOnly) {
         if (!warned.includes(uid)) {
-            client.sendMessage(uid, 'You are not allowed to use this bot. Please contact the owner of the bot to get access.')
+            client.sendMessage(uid, 'API limit was reached so my author had to disable the me for general use. I require cloud servers to live on and power my links to OpenAI which is why I am not free. If you want to get added to the whitelist, please contact my author. Thank you all for your support.')
             warned.push(uid)
 
         }
@@ -205,12 +208,6 @@ client.on('message', async (message) => {
 
 client.on('ready', async () => {
     console.log('Client is ready!');
-    let clientContacts = await client.getContacts();
-    clientContacts.forEach(contact => {
-        if (contact.isMyContact) {
-            contacts.push(contact.id._serialized)
-        }
-    })
 });
 
 client.on('disconnected', async (reason) => {
