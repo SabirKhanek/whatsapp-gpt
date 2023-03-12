@@ -207,8 +207,9 @@ client.on('ready', async () => {
     console.log('Client is ready!');
     let clientContacts = await client.getContacts();
     clientContacts.forEach(contact => {
-        if (contact.isMyContact)
+        if (contact.isMyContact) {
             contacts.push(contact.id._serialized)
+        }
     })
 });
 
